@@ -1,8 +1,8 @@
 # Tecmax App – Estructura Lógica Base (Documento Maestro)
 
-Este documento define la estructura lógica y la base lógica del sistema Tecmax App.
+Este documento define la estructura lógica y la base conceptual del sistema Tecmax App.
 Es la referencia principal del proyecto y gobierna la coherencia entre visión,
-procesos, datos, requerimientos y futuras implementaciones.
+procesos, datos, requerimientos y la implementación futura.
 
 ---
 
@@ -12,8 +12,11 @@ Tecmax App se organiza bajo el siguiente eje central:
 
 Empresa → Cliente → Equipo → Servicio Técnico → Insumos
 
-El **contador** es un dato obligatorio y transversal a todo el sistema.
+El **contador** es un dato obligatorio y transversal.
 No existe servicio técnico ni instalación de insumos sin registro de contador.
+
+El sistema está diseñado para operar en modo **offline-first**,
+con sincronización periódica a la nube como respaldo y consolidación.
 
 ---
 
@@ -21,10 +24,20 @@ No existe servicio técnico ni instalación de insumos sin registro de contador.
 
 ### Empresa
 - Existe una sola empresa por instalación.
-- Es la raíz del sistema.
+- Es la raíz del sistema y provee contexto global.
+
+La empresa gestiona:
+- identidad (nombre, logo, NIT)
+- técnicos
+- proveedores
+- preferencias técnicas
+- carpeta raíz de almacenamiento
+- respaldo en la nube
 
 Relación:
-Empresa (1) → Clientes (N)
+Empresa (1) → Clientes (N)  
+Empresa (1) → Técnicos (N)  
+Empresa (1) → Proveedores (N)
 
 ---
 
@@ -47,25 +60,48 @@ Equipo (1) → Servicios Técnicos (N)
 
 ---
 
+## 3. Servicios técnicos
+
 ### Servicio Técnico
 - Representa una intervención técnica sobre un equipo.
-- El contador es obligatorio al inicio del servicio.
+- Siempre está asociado a un técnico.
+- El contador es obligatorio.
+- El servicio es la **unidad real de trabajo y facturación**.
 
 Relaciones:
 Servicio Técnico (1) → Insumos (N)  
 Servicio Técnico (1) → Documentos (N)
 
+El **precio final** que aparece en la factura se define y se congela
+únicamente en el servicio donde el insumo se instala.
+
 ---
 
-## 3. Insumos y cotizaciones
+## 4. Técnicos y roles
+
+### Técnico
+- Puede existir más de un técnico por empresa.
+- Cada técnico trabaja de forma independiente y offline.
+- El técnico es un **dato del servicio**, no una estructura de carpetas.
+
+Roles:
+- Técnico de campo: registra servicios e insumos.
+- Técnico central / jefe: cotiza, habla con proveedores y controla numeración.
+
+Relación:
+Técnico (1) → Servicios Técnicos (N)
+
+---
+
+## 5. Insumos y cotizaciones
 
 ### Insumo
-- Elemento utilizado, cambiado o evaluado durante un servicio técnico.
+- Elemento utilizado o evaluado durante un servicio técnico.
 - Puede ser consumible o no consumible.
 
 Estados:
 - Cambiado
-- No cambiado (pasa a cotización)
+- No cambiado (genera cotización)
 
 Relación:
 Insumo (1) → Cotización (0..1)
@@ -73,21 +109,25 @@ Insumo (1) → Cotización (0..1)
 ---
 
 ### Cotización
-- Solo existe si el insumo no fue cambiado.
-- Permite seguimiento y recordatorios.
-- Puede cerrarse cuando el insumo se cambia.
+- Solo existe para insumos no cambiados.
+- Registra precios del proveedor y acuerdos preliminares con el cliente.
+- No genera facturación directa.
+
+Reglas:
+- La cotización **no define el precio final de la factura**.
+- El precio final se guarda solo en el servicio donde se instala el insumo.
 
 Relación:
 Cotización (1) → Insumo (1)
 
 ---
 
-## 4. Historial técnico
+## 6. Historial técnico
 
 ### Historial de Insumo
 - Registra cambios reales de insumos.
 - Incluye marca, fecha y contador del cambio.
-- Permite calcular durabilidad por contador.
+- Permite análisis de durabilidad y calidad.
 
 Relación:
 Equipo (1) → Historial de Insumos (N)
@@ -96,7 +136,7 @@ Este historial es información interna del técnico y no se muestra al cliente.
 
 ---
 
-## 5. Venta de Tóner
+## 7. Venta de Tóner
 
 ### Venta de Tóner
 - Es un caso especial de servicio técnico.
@@ -108,7 +148,7 @@ Venta de Tóner (1) → Servicio Técnico (1)
 
 ---
 
-## 6. Documentos
+## 8. Documentos
 
 ### Documento
 - Generado a partir de un servicio técnico.
@@ -117,25 +157,43 @@ Venta de Tóner (1) → Servicio Técnico (1)
 Relación:
 Servicio Técnico (1) → Documentos (N)
 
+Los documentos utilizan información de la empresa (nombre y logo),
+pero no exponen toda la información técnica interna.
+
 ---
 
-## 7. Reglas estructurales no negociables
+## 9. Sincronización y numeración
+
+- Cada técnico trabaja offline en su dispositivo.
+- Los servicios se crean sin numeración global.
+- Cada 12 horas (o manualmente) se sincroniza con la nube.
+- En la sincronización:
+  - se comparan clientes, equipos y servicios
+  - se asigna un **ID global único** al servicio
+  - se consolida el historial central
+
+La carpeta central de la empresa es la **única fuente de verdad**.
+
+---
+
+## 10. Reglas estructurales no negociables
 
 - No existen servicios sin equipo.
 - No existen equipos sin cliente.
 - No existen clientes sin empresa.
 - Todo servicio requiere contador obligatorio.
-- El historial técnico no se elimina.
-- Las cotizaciones no se pierden, se cierran o evolucionan.
-- La información interna del técnico no siempre se refleja en documentos PDF.
+- La numeración de servicios es global y centralizada.
+- El técnico no define estructura de carpetas.
+- Las cotizaciones no generan facturas automáticamente.
+- El historial técnico nunca se elimina.
 
 ---
 
-## 8. Rol del documento
+## 11. Rol del documento
 
 Este documento actúa como:
-- Base lógica del sistema.
-- Referencia estructural única del proyecto.
-- Punto de alineación entre visión, procesos, datos y requerimientos.
+- base lógica del sistema
+- referencia estructural única
+- punto de alineación entre visión, procesos, datos y código
 
-No describe interfaz gráfica ni tecnología de implementación.
+No describe interfaz gráfica ni tecnología específica.
