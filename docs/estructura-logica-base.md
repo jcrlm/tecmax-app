@@ -1,141 +1,58 @@
-# Tecmax App – Estructura Lógica Base (Documento Maestro)
+---
 
-Este documento define la estructura lógica y la base lógica del sistema Tecmax App.
-Es la referencia principal del proyecto y gobierna la coherencia entre visión,
-procesos, datos, requerimientos y futuras implementaciones.
+## 10. Informes, arqueo y análisis mensual
+
+Tecmax App incluye un sistema de informes internos orientados al control técnico,
+operativo y financiero del negocio.  
+Estos informes no crean información nueva, sino que analizan datos existentes.
+
+### Principio fundamental
+- El servicio técnico es la unidad base.
+- El historial de insumos es la memoria.
+- Los informes son lecturas y agrupaciones.
 
 ---
 
-## 1. Principio estructural del sistema
+### Informes mensuales internos
 
-Tecmax App se organiza bajo el siguiente eje central:
+El sistema permite generar, por mes:
 
-Empresa → Cliente → Equipo → Servicio Técnico → Insumos
+- Informe de insumos cambiados (general)
+- Informe de insumos no cambiados / cotizados
+- Informe de ventas de tóner
+- Informe de servicios realizados
+- Informe de facturación total
+- Informe por técnico (opcional)
 
-El **contador** es un dato obligatorio y transversal a todo el sistema.
-No existe servicio técnico ni instalación de insumos sin registro de contador.
-
----
-
-## 2. Entidades raíz y relaciones
-
-### Empresa
-- Existe una sola empresa por instalación.
-- Es la raíz del sistema.
-
-Relación:
-Empresa (1) → Clientes (N)
+Estos informes se generan bajo demanda y no afectan la operación diaria.
 
 ---
 
-### Cliente
-- Identificado de forma única por cédula o NIT.
-- No puede existir sin una empresa.
+### Arqueo técnico y financiero
 
-Relación:
-Cliente (1) → Equipos (N)
-
----
-
-### Equipo
-- Pertenece a un único cliente.
-- Mantiene historial técnico independiente.
-- Se identifica por número de serie dentro del cliente.
-
-Relación:
-Equipo (1) → Servicios Técnicos (N)
+El arqueo mensual permite:
+- validar lo facturado vs lo ejecutado
+- analizar frecuencia de fallas
+- identificar insumos más utilizados
+- preparar compras por volumen
 
 ---
 
-### Servicio Técnico
-- Representa una intervención técnica sobre un equipo.
-- El contador es obligatorio al inicio del servicio.
+### Vistas por cliente y por equipo
 
-Relaciones:
-Servicio Técnico (1) → Insumos (N)  
-Servicio Técnico (1) → Documentos (N)
+El sistema permite visualizar:
+- insumos cambiados por cliente
+- insumos cambiados por equipo
+- historial completo por máquina
 
----
-
-## 3. Insumos y cotizaciones
-
-### Insumo
-- Elemento utilizado, cambiado o evaluado durante un servicio técnico.
-- Puede ser consumible o no consumible.
-
-Estados:
-- Cambiado
-- No cambiado (pasa a cotización)
-
-Relación:
-Insumo (1) → Cotización (0..1)
+Estas vistas son consultas lógicas basadas en servicios e historial,
+no estructuras de carpetas independientes.
 
 ---
 
-### Cotización
-- Solo existe si el insumo no fue cambiado.
-- Permite seguimiento y recordatorios.
-- Puede cerrarse cuando el insumo se cambia.
+### Reglas importantes
 
-Relación:
-Cotización (1) → Insumo (1)
-
----
-
-## 4. Historial técnico
-
-### Historial de Insumo
-- Registra cambios reales de insumos.
-- Incluye marca, fecha y contador del cambio.
-- Permite calcular durabilidad por contador.
-
-Relación:
-Equipo (1) → Historial de Insumos (N)
-
-Este historial es información interna del técnico y no se muestra al cliente.
-
----
-
-## 5. Venta de Tóner
-
-### Venta de Tóner
-- Es un caso especial de servicio técnico.
-- Puede generar historial si se instala.
-- Puede quedar como backup si no se instala.
-
-Relación:
-Venta de Tóner (1) → Servicio Técnico (1)
-
----
-
-## 6. Documentos
-
-### Documento
-- Generado a partir de un servicio técnico.
-- Puede ser reporte técnico o factura.
-
-Relación:
-Servicio Técnico (1) → Documentos (N)
-
----
-
-## 7. Reglas estructurales no negociables
-
-- No existen servicios sin equipo.
-- No existen equipos sin cliente.
-- No existen clientes sin empresa.
-- Todo servicio requiere contador obligatorio.
-- El historial técnico no se elimina.
-- Las cotizaciones no se pierden, se cierran o evolucionan.
-- La información interna del técnico no siempre se refleja en documentos PDF.
-
----
-
-## 8. Rol del documento
-
-Este documento actúa como:
-- Base lógica del sistema.
-- Referencia estructural única del proyecto.
-- Punto de alineación entre visión, procesos, datos y requerimientos.
-
-No describe interfaz gráfica ni tecnología de implementación.
+- No se crean carpetas duplicadas de insumos.
+- No existen carpetas separadas de repuestos cambiados o no cambiados.
+- Todo insumo vive dentro de un servicio y tiene un estado.
+- Los informes no modifican datos originales.
